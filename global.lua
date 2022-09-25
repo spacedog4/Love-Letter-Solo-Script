@@ -58,6 +58,7 @@ local setupFinished = false
 local turn = 'player'
 
 local chooseCards = {}
+local chooseCardFor = '';
 local selectedPrincessRetinue
 local currentActionCard
 local choosedCardMenu -- The card choosed from the user so the code can detect it
@@ -98,17 +99,19 @@ function hideChooseCardMenu()
 end	
 
 function handleChoosedCardMenu(a)
-	selectedPrincessRetinue.setPosition(Vector(selectedPrincessRetinue.getPosition()) + Vector(0,2,0))
-	selectedPrincessRetinue.setRotationSmooth({0,270,0})	
+
+    -- this code I think was repeated, keep it here just in case
+	-- selectedPrincessRetinue.setPosition(Vector(selectedPrincessRetinue.getPosition()) + Vector(0,2,0))
+	-- selectedPrincessRetinue.setRotationSmooth({0,270,0})	
+
+    selectedPrincessRetinue.highlightOff('Blue')
 
 	if selectedPrincessRetinue.getName() == lastChoosedCardMenu then
 		discardCard(selectedPrincessRetinue)
 		discardCard(currentActionCard)
 	else
 		discardCard(currentActionCard)
-	end
-
-	selectedPrincessRetinue.highlightOff('Blue')
+    end
 end
 
 function discardCard(card)
@@ -192,11 +195,14 @@ function handleGuardaAction()
 	        color          = {0.3, 0.8, 0.3},
 	        font_color     = {1, 1, 1}
 	    })
-		
+
 	end
 end
 
 function chooseCardForGuarda(obj, player_clicker_color, alt_click)
+    -- Destroy all buttons and show a blue highlight around the selected card so the user knows which one he selected
+    -- Also enable the ChooseCardMenu that shows the user a list of card's name for him to guess
+
 	for i = #chooseCards,1,-1 
 	do 
 		destroyObject(chooseCards[i].buttonObj)
@@ -318,12 +324,14 @@ end
 --[[ The onUpdate event is called once per frame. --]]
 function onUpdate ()
     if princessCard ~= nil and secretAgentCard ~= nil and #princessRetinue == 6 and setupFinished == false then
+        -- Shows to the user that everything is ready, princess and shes retinue and secret agent has been draw
     	broadcastToAll("Tudo pronto")
     	setupFinished = true
     	UI.setAttribute('DrawMenu', 'active', 'true')
     end
 
     if player ~= nil then
+        -- if player has more than one card in hand and the draw menu is active, disable it
 	    if #player.getHandObjects() > 1 and UI.getAttribute('DrawMenu', 'active') == 'true' then
 	    	UI.setAttribute('DrawMenu', 'active', 'false')
 	    end
@@ -338,14 +346,16 @@ function onUpdate ()
     -- end
 
     -- Listen for select Choose Card Menu
-
     if choosedCardMenu ~= nil then
+        -- Rotate previous selected card
     	selectedPrincessRetinue.setPosition(Vector(selectedPrincessRetinue.getPosition()) + Vector(0,2,0))
 		selectedPrincessRetinue.setRotationSmooth({0,270,0})	
 
+        -- store the selected card and empty the current one so in the next frame onUpdate event doesn't enter here again
 		lastChoosedCardMenu = choosedCardMenu
 		choosedCardMenu = nil
 
+        -- calls HandleChoosedCardMenu function once after 1 second
 		Timer.create({
 			identifier = "HandleChoosedCardMenu",
 			function_name = "handleChoosedCardMenu",
