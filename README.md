@@ -1,7 +1,7 @@
 # Love-Letter-Solo-Script
 Script for a Love Letter Solo Mode mod in Table Top 
 
-This script is made in Lua and basic can only be used in a correct mod for table top (not publish yet).
+This script is made in Lua and basic can only be used in the correct mod for table top (not published yet).
 
 This repo has the propose to store the script for future research or reference
 
