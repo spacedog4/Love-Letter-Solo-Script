@@ -127,6 +127,7 @@ function frontFlipCard(card)
 end
 
 function drawFromSecretAgent()
+    secretAgentCard.interactable = true
 	secretAgentCard.deal(1)
 end
 
