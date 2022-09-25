@@ -141,3 +141,53 @@
     	Condessa
 	</Button>
 </Panel>
+
+<Panel
+	id='ChoosePrincipeFor'
+  	active='false'
+  	height = '50%'
+  	width = '20%'
+  	rectAlignment="MiddleRight"
+>
+	<Text
+	    fontSize='20'
+	    fontStyle='Bold'
+	    position='100% 200 0'
+	    color= '#FFFFFF'
+  	>
+    	Em quem você quer aplicar o efeito?
+  	</Text>
+	<Button
+		onClick='choosePrincipeForMe'
+		width='300'
+		height='60'
+		position='0 130 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChoosePrincipeForMe'
+	>
+    	Em mim
+	</Button>
+	<Button
+		onClick='choosePrincipeForSecretAgent'
+		width='300'
+		height='60'
+		position='0 70 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChoosePrincipeForSecretAgent'
+	>
+    	Agente Secreto
+	</Button>
+    <Button
+		onClick='choosePrincipeForEnemy'
+		width='300'
+		height='60'
+		position='0 10 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChoosePrincipeForEnemy'
+	>
+    	Inimigo
+	</Button>
+</Panel>

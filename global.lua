@@ -114,10 +114,31 @@ function handleChoosedCardMenu(a)
     end
 end
 
+-- Helper functions start
+
 function discardCard(card)
 	card.setPositionSmooth(Vector(discardPosition) + Vector(0, 0, discardOffset))
 	discardOffset = discardOffset - 2
 end	
+
+function frontFlipCard(card)
+    selectedPrincessRetinue.setPosition(Vector(selectedPrincessRetinue.getPosition()) + Vector(0,2,0))
+    selectedPrincessRetinue.setRotationSmooth({0,270,0})
+end
+
+function drawFromSecretAgent()
+	secretAgentCard.deal(1)
+end
+
+function drawFromDeck()
+	drawToPlayer()
+end
+
+function drawToPlayer()
+	deck.deal(1)
+end
+
+-- Helper functions end
 
 function onObjectDrop(colorName, obj)
 	-- print('obj')
@@ -156,18 +177,98 @@ end
 function handleCardAction(name)
 	if name == 'Guarda' then
 		handleGuardaAction()
+    elseif name == 'Príncipe' then
+        handlePrincipeAction()
 	end
 end
 
 function handleGuardaAction()
+    -- This function is called if the user discard a Guarda
+
 	broadcastToAll("Escolha uma carta para revelar")
 
-	print(princessRetinue)
+    placeChooseButtonsForPrincessRetinue("chooseCardForGuarda")
 
-	for i = #princessRetinue,1,-1 
+end
+
+function handlePrincipeAction()
+    UI.setAttribute('ChoosePrincipeFor', 'active', 'true')
+end
+
+-- ChoosePrincipeFor start --
+
+function choosePrincipeForMe()
+    -- disable ChoosePrincipeFor UI
+    UI.setAttribute('ChoosePrincipeFor', 'active', 'false')
+
+    -- discard current card
+    discardCard(currentActionCard)
+
+    -- discard player hand card
+    Wait.time(
+        function()
+            playerHandCard = player.getHandObjects()[1]
+    
+            playerHandCardVector = playerHandCard.getPosition()
+            playerHandCard.setPosition(playerHandCardVector + Vector(playerHandCardVector[3] + 10, 0, 0))
+
+            discardCard(playerHandCard)
+        end,
+        0.5
+    )
+
+    -- draw a new card
+    Wait.time(
+        function()
+            drawFromDeck()
+        end,
+        1
+    )
+end
+
+function choosePrincipeForEnemy()
+    UI.setAttribute('ChoosePrincipeFor', 'active', 'false')
+
+    -- This function is called if the user discard a Principe
+    broadcastToAll("Escolha uma carta para descartar e trocar por uma nova do baralho")
+
+    placeChooseButtonsForPrincessRetinue("chooseCardForPrincipe")
+end
+
+function choosePrincipeForSecretAgent()
+    -- disable ChoosePrincipeFor UI
+    UI.setAttribute('ChoosePrincipeFor', 'active', 'false')
+
+    -- discard current card
+    discardCard(currentActionCard)
+
+    -- discard secret agent
+    Wait.time(
+        function()
+            secretAgentCard.flip()
+            discardCard(secretAgentCard)
+        end,
+        0.5
+    )
+
+    -- draw a new secret agent
+    Wait.time(
+        function()
+            drawSecretAgent()
+        end,
+        1
+    )
+
+end
+
+-- ChoosePrincipeFor end --
+
+function placeChooseButtonsForPrincessRetinue(callbackFunction)
+    -- Place a button on every princess retinue card so the user can select one
+    -- When choosing a callback function is called
+
+    for i = #princessRetinue,1,-1 
 	do 
-		print(i)
-   		print(princessRetinue[i].guid)
    		local obj = spawnObject({
 		    type = "reversi_chip",
 		    position = Vector(princessRetinue[i].getPosition()) + Vector(0,1,0),
@@ -183,7 +284,7 @@ function handleGuardaAction()
 		obj.interactable = false
 
 		obj.createButton({
-	        click_function = "chooseCardForGuarda",
+	        click_function = callbackFunction,
 	        function_owner = Global,
 	        label          = "Selecionar",
 	        tooltip        = "Selecionar esta carta",
@@ -216,19 +317,63 @@ function chooseCardForGuarda(obj, player_clicker_color, alt_click)
 				UI.setAttribute('ChooseCardMenu', 'active', 'true')
 				selectedPrincessRetinue.highlightOn('Blue')
 			end
-
-			-- princessRetinue.setPosition(Vector(princessRetinue.getPosition()) + Vector(0,2,0))
-			-- princessRetinue.setRotationSmooth({0,270,0})
 		end
 	end
+end
 
-	-- currentActionCard.setPositionSmooth(discardPosition)
+function chooseCardForPrincipe(obj, player_clicker_color, alt_click)
+    -- Destroy all buttons and replace the card with a new one
+
+	for i = #chooseCards,1,-1 
+	do 
+		destroyObject(chooseCards[i].buttonObj)
+
+		if chooseCards[i].buttonObj.guid == obj.guid then
+			chooseCards[i].buttonObj.clearButtons()
+
+            selectedPrincessRetinue = chooseCards[i].princessRetinue
+
+            -- flip and discard selected card
+            frontFlipCard(selectedPrincessRetinue)
+            discardCard(selectedPrincessRetinue)
+
+            Wait.time(
+                function() 
+                    discardCard(currentActionCard)
+                end, 
+                0.5
+            )
+
+            Wait.time(
+                function() 
+                    print(selectedPrincessRetinue.getPosition())
+
+                    for i = #princessRetinue,1,-1
+                    do
+                        if princessRetinue[i].guid == selectedPrincessRetinue.guid then
+                            -- draw a new card to the opponent
+                            local princessRetinueCard = deck.takeObject({
+                                flip     = false,
+                                position = princessRetinuePositions[i]
+                            })
+                        
+                            princessRetinueCard.interactable = false
+                        
+                            princessRetinue[i] = princessRetinueCard
+                        end
+                    end
+                end, 
+                1
+            )
+            
+		end
+	end
 end
 
 function inputSelectedCardHandler(obj, player_clicker_color, alt_click)
 end
 
-function switTurn()
+function switchTurn()
 	if turn == 'player' then
 		turn = 'oponent'
 		broadcastToAll("Turno do oponente")
@@ -236,14 +381,6 @@ function switTurn()
 		turn = 'player'
 		broadcastToAll("Seu turno")
 	end
-end
-
-function drawFromSecretAgent()
-	secretAgentCard.deal(1)
-end
-
-function drawFromDeck()
-	drawToPlayer()
 end
 
 function toggleStartGameMenu()
@@ -262,7 +399,7 @@ function toggleDrawMenu()
 	end
 end
 
-function setup ()
+function setup()
 	broadcastToAll("Preparando...")
 	toggleStartGameMenu()
 
@@ -274,10 +411,6 @@ function setup ()
     drawSecretAgent()
 
     drawToPlayer()
-end
-
-function drawToPlayer ()
-	deck.deal(1)
 end
 
 function drawSecretAgent()
@@ -348,8 +481,7 @@ function onUpdate ()
     -- Listen for select Choose Card Menu
     if choosedCardMenu ~= nil then
         -- Rotate previous selected card
-    	selectedPrincessRetinue.setPosition(Vector(selectedPrincessRetinue.getPosition()) + Vector(0,2,0))
-		selectedPrincessRetinue.setRotationSmooth({0,270,0})	
+    	frontFlipCard(selectedPrincessRetinue)
 
         -- store the selected card and empty the current one so in the next frame onUpdate event doesn't enter here again
 		lastChoosedCardMenu = choosedCardMenu
