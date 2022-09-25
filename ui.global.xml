@@ -1,0 +1,143 @@
+<!-- Xml UI. See documentation: https://api.tabletopsimulator.com/ui/introUI/ -->
+<Panel
+	id='StartGameMenu'
+  	active='true'
+  	height = '50%'
+  	width = '20%'
+  	rectAlignment="MiddleRight"
+>
+	<Button
+		onClick='setup'
+		width='300'
+		height='60'
+		position='0 130 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='setup'
+	>
+    	Iniciar
+	</Button>
+
+</Panel>
+
+<Panel
+	id='DrawMenu'
+  	active='false'
+  	height = '50%'
+  	width = '20%'
+  	rectAlignment="MiddleRight"
+>
+	<Text
+	    fontSize='20'
+	    fontStyle='Bold'
+	    position='100% 200 0'
+	    color= '#FFFFFF'
+  	>
+    	Comprar de onde?
+  	</Text>
+	<Button
+		onClick='drawFromDeck'
+		width='300'
+		height='60'
+		position='0 130 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='drawFromDeck'
+	>
+    	Baralho
+	</Button>
+	<Button
+		onClick='drawFromSecretAgent'
+		width='300'
+		height='60'
+		position='0 70 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='drawSecretAgent'
+	>
+    	Agente Secreto
+	</Button>
+</Panel>
+
+<Panel
+	id='ChooseCardMenu'
+  	active='false'
+  	height = '50%'
+  	width = '20%'
+  	rectAlignment="MiddleRight"
+>
+	<Text
+	    fontSize='20'
+	    fontStyle='Bold'
+	    position='100% 200 0'
+	    color= '#FFFFFF'
+  	>
+    	Selecione uma carta
+  	</Text>
+	<Button
+		onClick='chooseCardMenuPadre'
+		width='300'
+		height='60'
+		position='0 130 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseCardMenuPadre'
+	>
+    	Padre
+	</Button>
+	<Button
+		onClick='chooseCardMenuBarao'
+		width='300'
+		height='60'
+		position='0 70 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseCardMenuBarao'
+	>
+    	Barão
+	</Button>
+	<Button
+		onClick='chooseCardMenuAia'
+		width='300'
+		height='60'
+		position='0 10 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseCardMenuAia'
+	>
+    	Aia
+	</Button>
+	<Button
+		onClick='chooseCardMenuPrincipe'
+		width='300'
+		height='60'
+		position='0 -50 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseCardMenuPrincipe'
+	>
+    	Príncipe
+	</Button>
+	<Button
+		onClick='chooseCardMenuRei'
+		width='300'
+		height='60'
+		position='0 -110 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseCardMenuRei'
+	>
+    	Rei
+	</Button>
+	<Button
+		onClick='chooseCardMenuCondessa'
+		width='300'
+		height='60'
+		position='0 -170 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseCardMenuCondessa'
+	>
+    	Condessa
+	</Button>
+</Panel>
