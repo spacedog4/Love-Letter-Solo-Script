@@ -191,3 +191,42 @@
     	Inimigo
 	</Button>
 </Panel>
+
+<Panel
+	id='ChooseBaraoVersus'
+  	active='false'
+  	height = '50%'
+  	width = '20%'
+  	rectAlignment="MiddleRight"
+>
+	<Text
+	    fontSize='20'
+	    fontStyle='Bold'
+	    position='100% 200 0'
+	    color= '#FFFFFF'
+  	>
+    	Escolha uma carta
+  	</Text>
+	<Button
+		onClick='ChooseBaraoVersusHand'
+		width='300'
+		height='60'
+		position='0 130 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseBaraoVersusHand'
+	>
+    	Carta da Mão
+	</Button>
+	<Button
+		onClick='ChooseBaraoVersusSecretAgent'
+		width='300'
+		height='60'
+		position='0 70 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseBaraoVersusSecretAgent'
+	>
+    	Agente Secreto
+	</Button>
+</Panel>

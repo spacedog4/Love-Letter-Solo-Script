@@ -31,6 +31,9 @@ local cards = {
 	['Guarda'] = {
 		value = 1
 	},
+	['Príncipe'] = {
+		value = 8,
+	},
 	['Aia'] = {
 		value = 4
 	},
@@ -60,8 +63,13 @@ local turn = 'player'
 local chooseCards = {}
 local chooseCardFor = '';
 local selectedPrincessRetinue
-local currentActionCard
-local choosedCardMenu -- The card choosed from the user so the code can detect it
+
+local currentActionCard -- the current card the player is playing
+local currentOpponentActionCard -- the current card the opponent is playing
+
+local lockOpponentLoop = false
+
+local choosedCardMenu -- The card choosed from the user for guarda, principe, etc so the code can detect it
 local lastChoosedCardMenu -- The choosed card after the event has detected it 
 
 function onLoad()
@@ -101,29 +109,37 @@ end
 function handleChoosedCardMenu(a)
 
     -- this code I think was repeated, keep it here just in case
-	-- selectedPrincessRetinue.setPosition(Vector(selectedPrincessRetinue.getPosition()) + Vector(0,2,0))
-	-- selectedPrincessRetinue.setRotationSmooth({0,270,0})	
 
     selectedPrincessRetinue.highlightOff('Blue')
 
 	if selectedPrincessRetinue.getName() == lastChoosedCardMenu then
 		discardCard(selectedPrincessRetinue)
-		discardCard(currentActionCard)
+
+		for i = #princessRetinue,1,-1 
+		do 
+			if princessRetinue[i] != 'done' and princessRetinue[i].guid == selectedPrincessRetinue.guid then
+				princessRetinue[i] = 'done'
+			end
+		end
+
+		Wait.time(
+			function()
+				discardCard(currentActionCard)
+				switchTurn()
+			end,
+			1
+		)
 	else
 		discardCard(currentActionCard)
+		switchTurn()
     end
 end
 
 -- Helper functions start
 
 function discardCard(card)
-	card.setPositionSmooth(Vector(discardPosition) + Vector(0, 0, discardOffset))
+	card.setPositionSmooth(Vector(discardPosition) + Vector(0, 1, discardOffset))
 	discardOffset = discardOffset - 2
-end	
-
-function frontFlipCard(card)
-    selectedPrincessRetinue.setPosition(Vector(selectedPrincessRetinue.getPosition()) + Vector(0,2,0))
-    selectedPrincessRetinue.setRotationSmooth({0,270,0})
 end
 
 function drawFromSecretAgent()
@@ -178,8 +194,14 @@ end
 function handleCardAction(name)
 	if name == 'Guarda' then
 		handleGuardaAction()
-    elseif name == 'Príncipe' then
-        handlePrincipeAction()
+	elseif name == 'Príncipe' then
+		handlePrincipeAction()
+	end
+end
+
+function handleOpponentCardAction(name)
+	if name == 'Barão' then
+		handleOpponentBaraoAction()
 	end
 end
 
@@ -188,12 +210,17 @@ function handleGuardaAction()
 
 	broadcastToAll("Escolha uma carta para revelar")
 
+	-- place the buttons above princess retinue so the user can choose a card to reveal
     placeChooseButtonsForPrincessRetinue("chooseCardForGuarda")
 
 end
 
 function handlePrincipeAction()
     UI.setAttribute('ChoosePrincipeFor', 'active', 'true')
+end
+
+function handleOpponentBaraoAction()
+	UI.setAttribute('ChooseBaraoVersus', 'active', 'true')
 end
 
 -- ChoosePrincipeFor start --
@@ -222,6 +249,7 @@ function choosePrincipeForMe()
     Wait.time(
         function()
             drawFromDeck()
+			switchTurn()
         end,
         1
     )
@@ -246,7 +274,7 @@ function choosePrincipeForSecretAgent()
     -- discard secret agent
     Wait.time(
         function()
-            secretAgentCard.flip()
+            if secretAgentCard.is_face_down then secretAgentCard.flip() end
             discardCard(secretAgentCard)
         end,
         0.5
@@ -256,6 +284,7 @@ function choosePrincipeForSecretAgent()
     Wait.time(
         function()
             drawSecretAgent()
+			switchTurn()
         end,
         1
     )
@@ -264,40 +293,134 @@ end
 
 -- ChoosePrincipeFor end --
 
+-- ChooseBaraoVersus start --
+
+function ChooseBaraoVersusHand()
+	ChooseBaraoVersusResolver('hand')
+end
+
+function ChooseBaraoVersusSecretAgent()
+	waitTime = 0
+	if secretAgentCard.is_face_down then 
+		secretAgentCard.flip() 
+		waitTime = 1
+	end
+
+	Wait.time(
+		function()
+			ChooseBaraoVersusResolver('secretAgent')
+		end,
+		waitTime
+	)
+end
+
+function ChooseBaraoVersusResolver(target)
+	UI.setAttribute('ChooseBaraoVersus', 'active', 'false')
+
+	-- get and flip next opponent card value
+	referenceCard = nil
+
+	for i = #princessRetinue,1,-1 do
+		if princessRetinue[i] != 'done' and princessRetinue[i].guid == currentOpponentActionCard.guid then
+			-- find the index for the opponent card, so we can get the next card in the retinue for the reference
+			referenceCardIndex = i - 1
+			if referenceCardIndex < 1 then
+				-- if the reference card index is bellow zero, it means the reference card is the princess
+				-- the player loses
+				gameover()
+				return
+			end
+			
+			referenceCard = princessRetinue[referenceCardIndex]
+
+			break
+		end
+	end
+
+	if referenceCard.is_face_down then referenceCard.flip() end
+
+	Wait.time(
+		function()
+			-- compare values
+			opponentValue = cards[referenceCard.getName()].value
+
+			playerValue = nil
+
+			if target == 'hand' then
+				playerValue = cards[player.getHandObjects()[1].getName()].value
+			elseif target == 'secretAgent' then
+				playerValue = cards[secretAgentCard.getName()].value
+			end
+
+			if opponentValue > playerValue then
+				-- if opponent wins, game over
+				gameover()
+				return
+			end
+
+			-- if player wins, discard opponent card
+			discardCard(currentOpponentActionCard)
+
+			for i = #princessRetinue,1,-1 do
+				if princessRetinue[i] != 'done' and princessRetinue[i].guid == currentOpponentActionCard.guid then
+					princessRetinue[i] = 'done'
+					break;
+				end
+			end
+
+			currentActionCard = nil
+
+			Wait.time(
+				function()
+					switchTurn()
+				end,
+				1
+			)
+		end,
+		1
+	)
+end
+
+-- ChooseBaraoVersus end --
+
 function placeChooseButtonsForPrincessRetinue(callbackFunction)
     -- Place a button on every princess retinue card so the user can select one
     -- When choosing a callback function is called
+	chooseCards = {}
 
     for i = #princessRetinue,1,-1 
 	do 
-   		local obj = spawnObject({
-		    type = "reversi_chip",
-		    position = Vector(princessRetinue[i].getPosition()) + Vector(0,1,0),
-		    scale = {.5, .5, .5},
-		    sound = false
-		})
+		isGuardAndCardFlipped = currentActionCard.getName() == 'Guarda' and princessRetinue[i].is_face_down == false
 
-   		table.insert(chooseCards, {
-   			princessRetinue = princessRetinue[i],
-   			buttonObj = obj
-   		})
+		if princessRetinue[i] != 'done' and isGuardAndCardFlipped == false then
+			local obj = spawnObject({
+				type = "reversi_chip",
+				position = Vector(princessRetinue[i].getPosition()) + Vector(0,1,0),
+				scale = {.5, .5, .5},
+				sound = false
+			})
 
-		obj.interactable = false
+			table.insert(chooseCards, {
+				princessRetinue = princessRetinue[i],
+				buttonObj = obj
+			})
 
-		obj.createButton({
-	        click_function = callbackFunction,
-	        function_owner = Global,
-	        label          = "Selecionar",
-	        tooltip        = "Selecionar esta carta",
-	        position       = {0, .2, 0},
-	        rotation       = {0, 270, 0},
-	        width          = 4000,
-	        height         = 6000,
-	        font_size      = 600,
-	        color          = {0.3, 0.8, 0.3},
-	        font_color     = {1, 1, 1}
-	    })
+			obj.interactable = false
 
+			obj.createButton({
+				click_function = callbackFunction,
+				function_owner = Global,
+				label          = "Selecionar",
+				tooltip        = "Selecionar esta carta",
+				position       = {0, .2, 0},
+				rotation       = {0, 270, 0},
+				width          = 4000,
+				height         = 6000,
+				font_size      = 600,
+				color          = {0.3, 0.8, 0.3},
+				font_color     = {1, 1, 1}
+			})
+		end
 	end
 end
 
@@ -335,7 +458,7 @@ function chooseCardForPrincipe(obj, player_clicker_color, alt_click)
             selectedPrincessRetinue = chooseCards[i].princessRetinue
 
             -- flip and discard selected card
-            frontFlipCard(selectedPrincessRetinue)
+            selectedPrincessRetinue.flip()
             discardCard(selectedPrincessRetinue)
 
             Wait.time(
@@ -347,11 +470,9 @@ function chooseCardForPrincipe(obj, player_clicker_color, alt_click)
 
             Wait.time(
                 function() 
-                    print(selectedPrincessRetinue.getPosition())
-
                     for i = #princessRetinue,1,-1
                     do
-                        if princessRetinue[i].guid == selectedPrincessRetinue.guid then
+                        if princessRetinue[i] != 'done' and princessRetinue[i].guid == selectedPrincessRetinue.guid then
                             -- draw a new card to the opponent
                             local princessRetinueCard = deck.takeObject({
                                 flip     = false,
@@ -361,6 +482,8 @@ function chooseCardForPrincipe(obj, player_clicker_color, alt_click)
                             princessRetinueCard.interactable = false
                         
                             princessRetinue[i] = princessRetinueCard
+
+							switchTurn()
                         end
                     end
                 end, 
@@ -376,12 +499,24 @@ end
 
 function switchTurn()
 	if turn == 'player' then
-		turn = 'oponent'
+		turn = 'opponent'
 		broadcastToAll("Turno do oponente")
-	elseif turn  == 'oponent' then
+
+		Wait.time(
+			function()
+				handleOpponentTurn()
+			end,
+        	1
+		)
+	elseif turn  == 'opponent' then
 		turn = 'player'
 		broadcastToAll("Seu turno")
+		UI.setAttribute('DrawMenu', 'active', 'true')
 	end
+end
+
+function gameover()
+	broadcastToAll("Você perdeu")
 end
 
 function toggleStartGameMenu()
@@ -455,6 +590,30 @@ function drawPrincessRetinueCard()
     table.insert(princessRetinue, princessRetinueCard)
 end
 
+function identifyOpponentCard()
+	-- identify first retinue card
+	for i = #princessRetinue,1,-1 do
+		if princessRetinue[i] != 'done' then
+			currentOpponentActionCard = princessRetinue[i]
+			break
+		end
+	end
+
+	if currentOpponentActionCard.is_face_down == true then
+		currentOpponentActionCard.flip()
+	end
+end
+
+function handleOpponentTurn()
+	identifyOpponentCard()
+	handleOpponentCardAction(currentOpponentActionCard.getName())
+
+	-- handle opponent card
+	-- pass the turn
+
+	-- currentOpponentActionCard = nil
+end
+
 --[[ The onUpdate event is called once per frame. --]]
 function onUpdate ()
     if princessCard ~= nil and secretAgentCard ~= nil and #princessRetinue == 6 and setupFinished == false then
@@ -481,8 +640,9 @@ function onUpdate ()
 
     -- Listen for select Choose Card Menu
     if choosedCardMenu ~= nil then
+		print('teste')
         -- Rotate previous selected card
-    	frontFlipCard(selectedPrincessRetinue)
+		selectedPrincessRetinue.flip()
 
         -- store the selected card and empty the current one so in the next frame onUpdate event doesn't enter here again
 		lastChoosedCardMenu = choosedCardMenu
