@@ -7,7 +7,7 @@ This repo has the propose to store the script for future research or reference
 
 Each file has the name as the menu in Table Top scripting screen
 
-[Love Letter solo mode rules](https://boardgamegeek.com/file/download_redirect/8d6322e579392f955d6b00b421f754d123067feb8c0bab7d/love_letter_solitaire_v110.pdf)
+[Love Letter solo mode rules](https://boardgamegeek.com/filepage/160865/love-letter-solitaire-solo-variant)
 
 [Love Letter solo mode rules PT-BR](https://ludopedia-anexos.nyc3.digitaloceanspaces.com/love_letter_love_letter_variante_solo_159655.pdf)
 

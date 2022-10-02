@@ -230,3 +230,42 @@
     	Agente Secreto
 	</Button>
 </Panel>
+
+<Panel
+	id='ChooseReiFor'
+  	active='false'
+  	height = '50%'
+  	width = '20%'
+  	rectAlignment="MiddleRight"
+>
+	<Text
+	    fontSize='20'
+	    fontStyle='Bold'
+	    position='100% 200 0'
+	    color= '#FFFFFF'
+  	>
+    	Você quer trocar com qual carta?
+  	</Text>
+	<Button
+		onClick='ChooseReiForHand'
+		width='300'
+		height='60'
+		position='0 130 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseReiForHand'
+	>
+    	Carta da Mão
+	</Button>
+	<Button
+		onClick='ChooseReiForSecretAgent'
+		width='300'
+		height='60'
+		position='0 70 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChooseReiForSecretAgent'
+	>
+    	Agente Secreto
+	</Button>
+</Panel>

@@ -145,6 +145,8 @@ end
 function drawFromSecretAgent()
 	secretAgentCard.setPositionSmooth(dropActionPosition)
 
+	UI.setAttribute('ChooseReiForSecretAgent', 'active', 'false')
+
 	Wait.time(
 		function()
 			secretAgentCard.flip()
@@ -199,6 +201,8 @@ function handleCardAction(name)
 		handleGuardaAction()
 	elseif name == 'Príncipe' then
 		handlePrincipeAction()
+	elseif name == 'Rei' then
+		handleReiAction()
 	end
 end
 
@@ -220,6 +224,10 @@ end
 
 function handlePrincipeAction()
     UI.setAttribute('ChoosePrincipeFor', 'active', 'true')
+end
+
+function handleReiAction()
+	UI.setAttribute('ChooseReiFor', 'active', 'true')
 end
 
 function handleOpponentBaraoAction()
