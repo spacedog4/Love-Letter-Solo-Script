@@ -393,9 +393,7 @@ function placeChooseButtonsForPrincessRetinue(callbackFunction)
 
     for i = #princessRetinue,1,-1 
 	do 
-		isGuardAndCardFlipped = currentActionCard.getName() == 'Guarda' and princessRetinue[i].is_face_down == false
-
-		if princessRetinue[i] != 'done' and isGuardAndCardFlipped == false then
+		if princessRetinue[i] != 'done' then
 			local obj = spawnObject({
 				type = "reversi_chip",
 				position = Vector(princessRetinue[i].getPosition()) + Vector(0,1,0),
@@ -443,6 +441,22 @@ function chooseCardForGuarda(obj, player_clicker_color, alt_click)
 			if selectedPrincessRetinue.is_face_down then
 				UI.setAttribute('ChooseCardMenu', 'active', 'true')
 				selectedPrincessRetinue.highlightOn('Blue')
+			else
+				discardCard(selectedPrincessRetinue)
+				
+				for i = #princessRetinue,1,-1 
+				do 
+					if princessRetinue[i] != 'done' and princessRetinue[i].guid == selectedPrincessRetinue.guid then
+						princessRetinue[i] = 'done'
+					end
+				end
+
+				Wait.time(
+					function()
+						switchTurn()
+					end,
+					1.5
+				)
 			end
 		end
 	end
@@ -643,7 +657,6 @@ function onUpdate ()
 
     -- Listen for select Choose Card Menu
     if choosedCardMenu ~= nil then
-		print('teste')
         -- Rotate previous selected card
 		selectedPrincessRetinue.flip()
 
