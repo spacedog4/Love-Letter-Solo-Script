@@ -143,8 +143,15 @@ function discardCard(card)
 end
 
 function drawFromSecretAgent()
-    secretAgentCard.interactable = true
-	secretAgentCard.deal(1)
+	secretAgentCard.setPositionSmooth(dropActionPosition)
+
+	Wait.time(
+		function()
+			secretAgentCard.flip()
+			UI.setAttribute('DrawMenu', 'active', 'false')
+		end,
+		1
+	)
 end
 
 function drawFromDeck()
@@ -170,10 +177,6 @@ end
 function collisionOnTable(params)
 	local info = params[1]
 	local obj = info.collision_object
-
-	-- print(obj)
-	-- print(obj.getPosition())
-	-- print(dropActionPosition)
 
 	if math.floor(obj.getPosition()[1]) == math.floor(dropActionPosition[1]) and math.floor(obj.getPosition()[3]) == math.floor(dropActionPosition[3]) then
 		if #player.getHandObjects() < 1 then
