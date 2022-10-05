@@ -169,17 +169,6 @@
     	Em mim
 	</Button>
 	<Button
-		onClick='choosePrincipeForSecretAgent'
-		width='300'
-		height='60'
-		position='0 70 0'
-		fontSize='20'
-		fontStyle='Bold'
-		id='ChoosePrincipeForSecretAgent'
-	>
-    	Agente Secreto
-	</Button>
-    <Button
 		onClick='choosePrincipeForEnemy'
 		width='300'
 		height='60'
@@ -189,6 +178,17 @@
 		id='ChoosePrincipeForEnemy'
 	>
     	Inimigo
+	</Button>
+	<Button
+		onClick='choosePrincipeForSecretAgent'
+		width='300'
+		height='60'
+		position='0 70 0'
+		fontSize='20'
+		fontStyle='Bold'
+		id='ChoosePrincipeForSecretAgent'
+	>
+    	Agente Secreto
 	</Button>
 </Panel>
 

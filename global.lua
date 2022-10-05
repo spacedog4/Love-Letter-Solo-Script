@@ -72,6 +72,8 @@ local lockOpponentLoop = false
 local choosedCardMenu -- The card choosed from the user for guarda, principe, etc so the code can detect it
 local lastChoosedCardMenu -- The choosed card after the event has detected it 
 
+local chooseReiFor
+
 function onLoad()
 	player = Player.getPlayers()[1]
     deck = getObjectFromGUID(deckGUID)
@@ -135,6 +137,13 @@ function handleChoosedCardMenu(a)
     end
 end
 
+function disableSecretAgentActions()
+	UI.setAttribute('ChooseReiForSecretAgent', 'active', 'false')
+	UI.setAttribute('ChooseBaraoVersusSecretAgent', 'active', 'false')
+	UI.setAttribute('ChoosePrincipeForSecretAgent', 'active', 'false')
+	UI.setAttribute('drawSecretAgent', 'active', 'false')
+end
+
 -- Helper functions start
 
 function discardCard(card)
@@ -143,14 +152,15 @@ function discardCard(card)
 end
 
 function drawFromSecretAgent()
-	secretAgentCard.setPositionSmooth(dropActionPosition)
-
-	UI.setAttribute('ChooseReiForSecretAgent', 'active', 'false')
-
+	if secretAgentCard.is_face_down then
+		secretAgentCard.flip()
+	end
+	
 	Wait.time(
 		function()
-			secretAgentCard.flip()
+			secretAgentCard.setPositionSmooth(dropActionPosition)
 			UI.setAttribute('DrawMenu', 'active', 'false')
+			disableSecretAgentActions()
 		end,
 		1
 	)
@@ -393,6 +403,77 @@ function ChooseBaraoVersusResolver(target)
 end
 
 -- ChooseBaraoVersus end --
+
+-- ChooseReiFor start --
+
+function ChooseReiForHand()
+	UI.setAttribute('ChooseReiFor', 'active', 'false');
+
+	chooseReiFor = 'hand';
+	placeChooseButtonsForPrincessRetinue('handleChooseReiFor');
+end
+
+function ChooseReiForSecretAgent()
+	UI.setAttribute('ChooseReiFor', 'active', 'false');
+
+	chooseReiFor = 'secretAgent';
+	placeChooseButtonsForPrincessRetinue('handleChooseReiFor');
+end
+
+function handleChooseReiFor(obj, player_clicker_color, alt_click)
+	-- Destroy all buttons and replace the card with a new one
+
+	for i = #chooseCards,1,-1 
+	do 
+		destroyObject(chooseCards[i].buttonObj)
+
+		if chooseCards[i].buttonObj.guid == obj.guid then
+			chooseCards[i].buttonObj.clearButtons()
+			
+            selectedPrincessRetinue = chooseCards[i].princessRetinue
+			playerHandCard = player.getHandObjects()[1]
+
+			princessRetinueIndex = nil
+			for j = #princessRetinue,1,-1
+			do
+				if princessRetinue[j] != 'done' and princessRetinue[j].guid == selectedPrincessRetinue.guid then
+					princessRetinueIndex = j
+				end
+			end
+
+			if chooseReiFor == 'hand' then
+				selectedPrincessRetinue.interactable = true
+				selectedPrincessRetinue.deal(1)
+				
+				playerHandCard.interactable = false
+
+				princessRetinue[princessRetinueIndex] = playerHandCard
+
+				playerHandCardVector = playerHandCard.getPosition()
+				playerHandCard.setPosition(playerHandCardVector + Vector(playerHandCardVector[3] + 10, 0, 0))
+
+				playerHandCard.setPositionSmooth(princessRetinuePositions[princessRetinueIndex])
+			elseif chooseReiFor == 'secretAgent' then
+				selectedPrincessRetinue.setPositionSmooth(secretAgentPosition)
+
+				princessRetinue[princessRetinueIndex] = secretAgentCard
+
+				secretAgentCard.setPositionSmooth(princessRetinuePositions[princessRetinueIndex])
+			end
+		end
+	end
+
+	chooseReiFor = nil
+
+	Wait.time(
+		function()
+			switchTurn()
+		end,
+		1
+	)
+end
+
+-- ChooseReiFor end
 
 function placeChooseButtonsForPrincessRetinue(callbackFunction)
     -- Place a button on every princess retinue card so the user can select one
