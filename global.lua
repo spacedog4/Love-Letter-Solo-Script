@@ -213,6 +213,8 @@ function handleCardAction(name)
 		handlePrincipeAction()
 	elseif name == 'Rei' then
 		handleReiAction()
+	elseif name == 'Padre' then
+		handlePadreAction()
 	end
 end
 
@@ -244,6 +246,12 @@ function handleReiAction()
 	UI.setAttribute('ChooseReiFor', 'active', 'true')
 end
 
+function handlePadreAction()
+	broadcastToAll("Escolha uma carta para revelar")
+
+	placeChooseButtonsForPrincessRetinue("handleCardForPadre")
+end
+
 function handleOpponentBaraoAction()
 	UI.setAttribute('ChooseBaraoVersus', 'active', 'true')
 end
@@ -273,6 +281,37 @@ function handleOpponentGuardaAction()
 			switchTurn()
 		end,
 		3
+	)
+end
+
+function handleCardForPadre(obj, player_clicker_color, alt_click)
+	-- Destroy all buttons and replace the card with a new one
+
+	for i = #chooseCards,1,-1 
+	do 
+		destroyObject(chooseCards[i].buttonObj)
+
+		if chooseCards[i].buttonObj.guid == obj.guid then
+			chooseCards[i].buttonObj.clearButtons()
+			
+            selectedPrincessRetinue = chooseCards[i].princessRetinue
+
+			selectedPrincessRetinue.flip()
+		end
+	end
+
+	Wait.time(
+		function()
+			discardCard(currentActionCard)
+		end,
+		1
+	)
+
+	Wait.time(
+		function()
+			switchTurn()
+		end,
+		2
 	)
 end
 
@@ -515,34 +554,49 @@ function placeChooseButtonsForPrincessRetinue(callbackFunction)
     for i = #princessRetinue,1,-1 
 	do 
 		if princessRetinue[i] != 'done' then
-			local obj = spawnObject({
-				type = "reversi_chip",
-				position = Vector(princessRetinue[i].getPosition()) + Vector(0,1,0),
-				scale = {.5, .5, .5},
-				sound = false
-			})
+			-- Dont place button on flipped cards if current action card is Padre
+			shouldPlaceButtonsOnFlippeds = currentActionCard.getName() != 'Padre';
 
-			table.insert(chooseCards, {
-				princessRetinue = princessRetinue[i],
-				buttonObj = obj
-			})
+			if princessRetinue[i].is_face_down or (shouldPlaceButtonsOnFlippeds and princessRetinue[i].is_face_down == false) then
+				local obj = spawnObject({
+					type = "reversi_chip",
+					position = Vector(princessRetinue[i].getPosition()) + Vector(0,1,0),
+					scale = {.5, .5, .5},
+					sound = false
+				})
 
-			obj.interactable = false
+				table.insert(chooseCards, {
+					princessRetinue = princessRetinue[i],
+					buttonObj = obj
+				})
 
-			obj.createButton({
-				click_function = callbackFunction,
-				function_owner = Global,
-				label          = "Selecionar",
-				tooltip        = "Selecionar esta carta",
-				position       = {0, .2, 0},
-				rotation       = {0, 270, 0},
-				width          = 4000,
-				height         = 6000,
-				font_size      = 600,
-				color          = {0.3, 0.8, 0.3},
-				font_color     = {1, 1, 1}
-			})
+				obj.interactable = false
+
+				obj.createButton({
+					click_function = callbackFunction,
+					function_owner = Global,
+					label          = "Selecionar",
+					tooltip        = "Selecionar esta carta",
+					position       = {0, .2, 0},
+					rotation       = {0, 270, 0},
+					width          = 4000,
+					height         = 6000,
+					font_size      = 600,
+					color          = {0.3, 0.8, 0.3},
+					font_color     = {1, 1, 1}
+				})
+			end
 		end
+	end
+
+	if currentActionCard.getName() == 'Padre' and #chooseCards == 0 then
+		discardCard(currentActionCard)
+		Wait.time(
+			function()
+				switchTurn()
+			end,
+			1
+		)
 	end
 end
 
