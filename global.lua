@@ -217,8 +217,12 @@ function handleCardAction(name)
 end
 
 function handleOpponentCardAction(name)
+	print(name)
+
 	if name == 'Barão' then
 		handleOpponentBaraoAction()
+	elseif name == 'Guarda' then
+		handleOpponentGuardaAction()
 	end
 end
 
@@ -242,6 +246,34 @@ end
 
 function handleOpponentBaraoAction()
 	UI.setAttribute('ChooseBaraoVersus', 'active', 'true')
+end
+
+function handleOpponentGuardaAction()
+	if secretAgentCard.is_face_down == false then
+		gameover()
+		return
+	end
+
+	Wait.time(
+		function()
+			secretAgentCard.flip()
+		end,
+		1
+	)
+
+	Wait.time(
+		function()
+			discardCard(currentOpponentActionCard)
+		end,
+		2
+	)
+
+	Wait.time(
+		function()
+			switchTurn()
+		end,
+		3
+	)
 end
 
 -- ChoosePrincipeFor start --
